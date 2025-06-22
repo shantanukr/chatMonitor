@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat Tester</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+</head>
+<body>
+<h3>Chat Message</h3>
+<input id="sender" placeholder="Name" />
+<input id="content" placeholder="Message" />
+<button onclick="send()">Send</button>
+<ul id="messages"></ul>
+
+<script>
+    const socket = new SockJS('http://localhost:8080/chat');
+    const stompClient = Stomp.over(socket);
+
+    stompClient.connect({}, function () {
+      stompClient.subscribe('/topic/messages', function (msg) {
+        const res = JSON.parse(msg.body);
+        document.getElementById('messages').innerHTML +=
+          `<li><b>${res.sender}:</b> ${res.message} (Risk: ${res.riskScore})</li>`;
+      });
+    });
+
+    function send() {
+      const sender = document.getElementById('sender').value;
+      const content = document.getElementById('content').value;
+      stompClient.send("/app/chat", {}, JSON.stringify({ sender, content }));
+    }
+</script>
+</body>
+</html>
